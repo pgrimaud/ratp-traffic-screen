@@ -12,6 +12,7 @@ function getApiData() {
 
             const rers = data.result.rers.length
             const metros = data.result.metros.length
+            const tramways = data.result.tramways.length
 
             let hasProblem = false
 
@@ -27,15 +28,53 @@ function getApiData() {
                 }
             }
 
+            for (let i = 0; i < tramways; i++) {
+                if (data.result.tramways[i].slug === 'critical') {
+                    hasProblem = true
+                }
+            }
+
             document.querySelector('.status h1').innerHTML = hasProblem ? 'Incident(s)' : 'Trafic normal'
 
             templateType('rers', data.result.rers)
             templateType('metros', data.result.metros)
             templateType('tramways', data.result.tramways)
+
+            showProblems(data.result)
         }
     }
     xhr.open('GET', 'https://api-ratp.pierre-grimaud.fr/v4/traffic');
     xhr.send()
+}
+
+function showProblems(data) {
+    const linesType = [
+        'rers',
+        'metros',
+        'tramways'
+    ]
+
+    for (let i = 0; i < linesType.length; i++) {
+
+        const lineType = linesType[i]
+
+        for (let j = 0; j < data[lineType].length; j++) {
+
+            const line = data[lineType][j]
+
+            if (line.slug !== 'normal') {
+                templateProblem(lineType, line)
+            }
+        }
+    }
+}
+
+function templateProblem(lineType, line) {
+    let template = document.querySelector('.col--traffic')
+    template.innerHTML += '<div class="row">' +
+        '<div class="col-sm-4">' + lineType + ' ' + line.line + '</div>' +
+        '<div class="col-sm-8">' + line.message + '</div>' +
+        '</div>'
 }
 
 function templateType(type, data) {
